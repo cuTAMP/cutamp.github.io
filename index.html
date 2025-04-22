@@ -1,2 +1,347 @@
-<h1>Coming soon...</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <base target="_blank">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="assets/tetris-icon.png">
+    <title>Differentiable GPU-Parallelized Task and Motion Planning</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
 
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+          }
+        };
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-291MD67PHF"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-291MD67PHF');
+    </script>
+</head>
+<body>
+    <section class="section">
+        <div class="container">
+            <button class="button dark-mode-toggle is-medium" onclick="toggleDarkMode()">
+                <span class="icon">
+                    <i class="fas fa-moon" id="theme-icon"></i>
+                </span>
+            </button>
+            <div class="content">
+                <div class="toc-container">
+                    <div class="toc-content">
+                        <aside class="menu">
+                            <p class="menu-label">
+                                Table of Contents
+                            </p>
+                            <ul class="menu-list">
+                                <li><a href="#method" target="_self">Method</a></li>
+                                <li><a href="#tetris" target="_self">Solving Highly-Constrained Problems</a></li>
+                                <li><a href="#goal-costs" target="_self">Optimizing Goal Costs</a></li>
+                                <li><a href="#skeleton-search" target="_self">Efficiently Searching over Plan Skeletons</a></li>
+                            </ul>
+                        </aside>
+                    </div>
+                </div>
+
+                <h1 class="title is-1 is-size-2-mobile mt-0">Differentiable GPU-Parallelized<br>Task and Motion Planning</h1>
+                
+                <div class="author-info">
+                    <p class="subtitle">
+                        <div class="is-inline-block is-size-5"><a class="has-text-weight-semibold" href="https://shen.nz">William Shen</a><sup>1,2</sup>,</div>
+                        <div class="is-inline-block is-size-5"><a class="has-text-weight-semibold" href="https://web.mit.edu/caelan/www/">Caelan Garrett</a><sup>2</sup>,</div>
+                        <div class="is-inline-block is-size-5"><a class="has-text-weight-semibold" href="https://nishanthjkumar.com">Nishanth Kumar</a><sup>1,2</sup>,</div>
+                        <div class="is-inline-block is-size-5"><a class="has-text-weight-semibold" href="https://imankgoyal.github.io/">Ankit Goyal</a><sup>2</sup>,</div>
+                        <div class="is-inline-block is-size-5"><a class="has-text-weight-semibold" href="https://robot-learning.cs.utah.edu/thermans">Tucker Hermans</a><sup>2,3</sup>,</div>
+                        <div class="is-inline-block is-size-5"><a class="has-text-weight-semibold" href="https://people.csail.mit.edu/lpk/">Leslie Pack Kaelbling</a><sup>1</sup>,</div>
+                        <div class="is-inline-block is-size-5"><a class="has-text-weight-semibold" href="https://people.csail.mit.edu/tlp/">Tomás Lozano-Pérez</a><sup>1</sup>,</div>
+                        <div class="is-inline-block is-size-5"><a class="has-text-weight-semibold" href="https://fabioramos.github.io/">Fabio Ramos</a><sup>2,4</sup></div>
+                    </p>
+                    <p>
+                        <div class="is-inline-block"><sup>1</sup><a href="https://www.csail.mit.edu/">MIT CSAIL</a>,</div>
+                        <div class="is-inline-block"><sup>2</sup><a href="https://research.nvidia.com/labs/srl/">NVIDIA Research</a>,</div>
+                        <div class="is-inline-block"><sup>3</sup><a href="https://www.utah.edu/">University of Utah</a>,</div>
+                        <div class="is-inline-block"><sup>4</sup><a href="https://www.sydney.edu.au/">University of Sydney</a></div>
+                    </p>
+                </div>
+
+                <div class="columns is-vcentered mt-1">
+                    <div class="column is-narrow">
+                        <!-- <a href="cutamp.pdf" class="button is-size-5 mr-1 mt-2">
+                            <span class="icon">
+                                <i class="fas fa-file-pdf"></i>
+                            </span>
+                            <span>Paper</span>
+                        </a> -->
+
+                        <a href="https://arxiv.org/abs/2411.11833" class="button is-size-5 mr-1 mt-2">
+                            <span class="icon">
+                                <i class="ai ai-arxiv"></i>
+                            </span>
+                            <span>arXiv</span>
+                        </a>
+
+                        <a class="button is-size-5 mr-1 mt-2" disabled>
+                            <span class="icon">
+                                <i class="fas fa-code"></i>
+                            </span>
+                            <span>Code (coming soon)</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="video-card">
+                    <video autoplay controls loop muted playsinline alt="Teaser Video">
+                        <source src="assets/videos/teaser.mp4" type="video/mp4">
+                    </video>
+                </div>
+
+                <h2 id="abstract" class="title is-4 mb-2">Abstract</h2>
+                <p style="font-size: 0.95em">
+                    Planning long-horizon robot manipulation requires making discrete decisions about which objects to interact with and continuous decisions about how to interact with them.
+                    A robot planner must select grasps, placements, and motions that are feasible and safe.
+                    This class of problems falls under Task and Motion Planning (TAMP) and poses significant computational challenges in terms of algorithm runtime and solution quality, particularly when the solution space is highly constrained.
+                    To address these challenges, we propose a new bilevel TAMP algorithm that leverages GPU parallelism to efficiently explore thousands of candidate continuous solutions simultaneously.
+                    Our approach uses GPU parallelism to sample an initial batch of solution seeds for a plan skeleton and to apply differentiable optimization on this batch to satisfy plan constraints and minimize solution cost.
+                    We demonstrate that our algorithm can effectively solve highly constrained problems with non-convex constraints in just seconds, substantially outperforming serial TAMP approaches, and validate our approach on multiple real-world robots.
+                </p>
+
+                <hr class="divider">
+
+                <h2 id="method" class="title is-3">Method</h2>
+                <img src="assets/cutamp-pipeline.png" alt="cuTAMP Pipeline" data-dark-src="assets/cutamp-pipeline-dark.png" data-light-src="assets/cutamp-pipeline.png">
+
+                <p class="is-size-6">
+                    <b>cuTAMP Overview.</b> cuTAMP frames TAMP as a backtracking bilevel search over plan skeletons. Each
+                    skeleton $\pi$ induces a continuous Constraint Satisfaction Problem that defines the structure of a particle (parameters) and cost
+                    functions (constraints and plan costs). These particles are optimized in parallel by evaluating their costs with differentiable
+                    cost functions, allowing gradient-based optimizers to iteratively update them towards satisfying solutions.
+                </p>
+
+                <h2 id="tetris" class="title is-3">Solving Highly-Constrained Problems</h2>
+                <p>
+                    In the Tetris domain, the robot's objective is to pack 5 blocks with non-convex shapes somewhere in a tight goal region.
+                    This problem requires reasoning about spatial arrangements, as the shapes will only fit if they are arranged in particular configuration modes.
+                </p>
+                <p>
+                    We optimize for placement poses, parametrized as <b>continuous</b> 4-DOF actions with positions $(x, y, z)$ and yaw angles $\theta$, along with their associated 7-DOF robot joint positions.
+                    Each particle is 90-dimensional (ten 7-DOF arm configurations and five 4-DOF placement poses).
+                    We sample a fixed set of grasps and use an off-the-shelf motion planner (<a href="https://curobo.org/">cuRobo</a>) to solve for the full trajectories.
+                </p>
+                <div class="columns is-multiline">
+                    <div class="column is-half">
+                        <div class="video-card">
+                            <video autoplay controls loop muted playsinline alt="Tetris Optimization">
+                                <source src="assets/videos/tetris-optimization.mp4" type="video/mp4">
+                            </video>
+                            <div class="video-card-content">
+                                <div class="video-title">Optimization Visualization</div>
+                                <p>We visualize the placement poses corresponding to the best particle as optimization progress.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="column is-half">
+                        <div class="video-card">
+                            <video autoplay controls loop muted playsinline alt="Tetris Execution">
+                                <source src="assets/videos/tetris-execution-2x.mp4" type="video/mp4">
+                            </video>
+                            <div class="video-card-content">
+                                <div class="video-title">TAMP Plan Execution</div>
+                                <p>
+                                    We show the full execution of the TAMP plan for the best particle. cuTAMP optimizes for a solution in just seconds.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 id="goal-costs" class="title is-3">Optimizing Goal Costs</h2>
+                <p>
+                    <b>cuTAMP</b> supports optimizing plan costs. We consider placing four objects into a large goal region and set a goal cost to minimize the distance between the objects in the final state.
+                    Our results demonstrate the clear benefit of combining sampling with differentiable optimization for substantially reducing the goal cost.
+                </p>
+                <div class="columns is-multiline">
+                    <div class="column is-half">
+                        <div class="video-card">
+                            <img src="assets/min-goal-dist.png" alt="Goal Cost Optimization" data-dark-src="assets/min-goal-dist-dark.png" data-light-src="assets/min-goal-dist.png">
+                            <div class="video-card-content">
+                                <div class="video-title">Minimizing Distance between Objects</div>
+                                <p>
+                                    We compare the final state after executing the best particle.
+                                    (a) cuTAMP achieves significantly lower cost compared to (b) parallelized sampling which performs no optimization.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="column is-half">
+                        <div class="video-card">
+                            <video autoplay controls loop muted playsinline alt="Minimizing y-position of objects">
+                                <source src="assets/videos/rummy-min-y.mp4" type="video/mp4">
+                            </video>
+                            <div class="video-card-content">
+                                <div class="video-title">Minimizing $y$-position of objects</div>
+                                <p>
+                                    We minimize the $y$-position of three cubes on a real Kinova Gen3 robot. 
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 id="skeleton-search" class="title is-3">Efficiently Searching over Plan Skeletons</h2>
+                <p>
+                    To efficiently guide the discrete search over plan skeletons and avoid optimizing unsolvable ones, we exploit parallelized constraint sampling from particle initialization to derive a <b>plan feasibility heuristic</b>.
+                    cuTAMP prioritizes skeletons for refinement based on their estimated feasibility, focusing our computational effort on those most likely to admit solutions.
+                </p>
+                <p>
+                    In Stick Button, the robot must press the red, green, and blue buttons using either its fingers or a stick as a tool.
+                    Due to the kinematic limitations of the Franka, the robot must use the stick to press the blue and green buttons, as they are out of direct reach.
+                    This results in a large number of plan skeletons that are infeasible or have extraneous actions.
+                    The best configuration of cuTAMP solves this problem in under 1.5 seconds.
+                </p>
+                <div class="columns is-multiline">
+                    <div class="column is-half">
+                        <div class="video-card">
+                            <img src="assets/stick-button-rollout.png" alt="Stick Button Rollout" data-dark-src="assets/stick-button-rollout-dark.png" data-light-src="assets/stick-button-rollout.png">
+                            <div class="video-card-content">
+                                <div class="video-title">Cross-Embodiment Generalization</div>
+                                <p>
+                                    The blue button is beyond the reach of the Franka, requiring it to use the stick as a tool.
+                                    In contrast, the UR5 can directly reach the button.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="column">
+                        <div class="video-card">
+                            <video autoplay controls loop muted playsinline alt="Video">
+                                <source src="assets/videos/rummy-obstruction.mp4" type="video/mp4">
+                            </video>
+                            <div class="video-card-content">
+                                <div class="video-title">Stack Red Block 🟥 on Blue Block 🟦</div>
+                                <p>
+                                    The Mustard Bottle and Canister are obstructing the placement.
+                                    cuTAMP reasons to move these objects out of the way first, before stacking the blocks.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="column is-full">
+                        <div class="video-card">
+                            <video autoplay controls loop muted playsinline alt="Video">
+                                <source src="assets/videos/ur5-fruit-packing.mp4" type="video/mp4">
+                            </video>
+                            <div class="video-card-content">
+                                <div class="video-title">Pack the Fruit on the White Cube</div>
+                                <p>
+                                    The strawberry 🍓 is obstructed by Lego blocks on all four sides, requiring at least two blocks to be moved out of the way.
+                                    This task requires more planning time as there are many more skeletons to be considered (there are 5698 skeletons in total).
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Citation section -->
+                <h3 class="title is-4">Citation</h3>
+                <div class="is-relative">
+                    <pre class="textarea is-family-code" readonly id="citation-text">@article{shen2024cutamp,
+    title={Differentiable GPU-Parallelized Task and Motion Planning},
+    author={Shen, William and Garrett, Caelan and Kumar, Nishanth and Goyal, Ankit and Hermans, Tucker and Kaelbling, Leslie Pack and Lozano-P{\'e}rez, Tom{\'a}s and Ramos, Fabio},
+    journal={arXiv preprint arXiv:2411.11833},
+    year={2024}
+}</pre>
+                    <button id="citation-copy-button" class="button is-small" onclick="copyCitation()">
+                        <span class="icon">
+                            <i class="fas fa-copy"></i>
+                        </span>
+                    </button>
+                    <div id="toast" class="notification is-success is-light is-hidden">
+                        Copied to clipboard!
+                    </div>
+                </div>
+
+                <hr class="divider">
+                <div class="level">
+                    <div class="level-left">
+                        <div class="level-item">
+                            <a href="https://github.com/cutamp/cutamp.github.io" class="has-text-weight-light">
+                                <span class="icon"><i class="fab fa-github"></i></span> Website source on GitHub
+                            </a>
+                        </div>
+                    </div>
+                    <div class="level-right">
+                        <div class="level-item">
+                            <p class="has-text-weight-light">Updated April 2025</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Handle copying citation text
+        const copyCitation = async () => {
+            try {
+                const citationText = document.getElementById('citation-text').innerText;
+                await navigator.clipboard.writeText(citationText);
+                
+                const toast = document.getElementById('toast');
+                toast.classList.remove('is-hidden');
+                setTimeout(() => toast.classList.add('is-hidden'), 2000);
+            } catch (err) {
+                console.error('Failed to copy citation:', err);
+            }
+        };
+
+        // Handle dark/light theme toggling
+        const updateTheme = (isDark) => {
+            const html = document.documentElement;
+            const themeIcon = document.getElementById('theme-icon');
+            
+            // Update theme
+            html.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            
+            // Update icon
+            themeIcon.classList.remove('fa-moon', 'fa-sun');
+            themeIcon.classList.add(isDark ? 'fa-sun' : 'fa-moon');
+            
+            // Update images
+            document.querySelectorAll('img[data-dark-src]').forEach(img => {
+                img.src = img.getAttribute(isDark ? 'data-dark-src' : 'data-light-src');
+            });
+        };
+
+        const toggleDarkMode = () => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            updateTheme(!isDark);
+        };
+
+        // Initialize theme based on system preference
+        const initializeTheme = () => {
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            updateTheme(prefersDark);
+        };
+
+        // Set initial theme
+        initializeTheme();
+
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+            updateTheme(e.matches);
+        });
+    </script>
+</body>
+  
+</html>
