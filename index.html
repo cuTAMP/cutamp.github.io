@@ -10,10 +10,24 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
 
+    <!-- Set initial theme and update images before first paint to prevent flashing or mismatch images -->
     <script>
         (function () {
           const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
           document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+        })();
+
+        (function () {
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+
+            // Update dark/light images immediately
+            window.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('img[data-dark-src]').forEach(img => {
+                const desiredSrc = img.getAttribute(prefersDark ? 'data-dark-src' : 'data-light-src');
+                img.src = desiredSrc;
+            });
+            });
         })();
     </script>
 
@@ -326,7 +340,13 @@
             
             // Update images
             document.querySelectorAll('img[data-dark-src]').forEach(img => {
-                img.src = img.getAttribute(isDark ? 'data-dark-src' : 'data-light-src');
+                const desiredSrc = img.getAttribute(isDark ? 'data-dark-src' : 'data-light-src');
+                if (!img.src.includes(desiredSrc)) {
+                    img.src = desiredSrc;
+                } else {
+                    // Force reload for Safari
+                    img.src = desiredSrc + '?v=' + Date.now();
+                }
             });
         };
 
